@@ -1,0 +1,43 @@
+# Source: cluster-api-aws/templates/job-post.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cqdh7uv5s-capi-aws-post
+  namespace: cqdh7uv5s
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: cqdh7uv5s-capi-aws
+    spec:
+      serviceAccountName: cqdh7uv5s-capi-aws
+      containers:
+      - name: generate-worker-machines
+        image: "ghcr.io/openinfradev/python_kubectl_argo:v1.1.0"
+        imagePullPolicy: IfNotPresent
+        command:
+        - timeout
+        - 20m
+        - /generate_worker_machines.py
+        - cqdh7uv5s
+        - cqdh7uv5s
+        volumeMounts:
+        - name: vol
+          subPath: mp.raw.yaml
+          mountPath: /mp.raw.yaml
+        - name: vol
+          subPath: md.raw.yaml
+          mountPath: /md.raw.yaml
+        - name: vol
+          subPath: generate_worker_machines.py
+          mountPath: /generate_worker_machines.py
+
+      volumes:
+      - name: vol
+        configMap:
+          name: cqdh7uv5s-capi-aws
+          defaultMode: 0555
+      restartPolicy: OnFailure
